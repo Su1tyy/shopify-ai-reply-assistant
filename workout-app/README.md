@@ -17,7 +17,9 @@ npx parcel build index.html --dist-dir dist --no-source-maps
 npx html-inline dist/index.html > bundle.html
 ```
 
-`PREVIEW` in `src/lib/store.tsx` seeds six weeks of sample history and keeps data under its own local key, so the preview never touches real logs.
+The live build saves everything on the device and mirrors it to the viewer's Claude account through the artifact `db` capability (published with `{ db: {}, user: {} }`), in their private `data/users/<id>/` folder: a `profile` document plus one document per workout. See `src/lib/sync.ts`. To save there, someone outside the owner's organization must be invited by email as an Editor, with no public link on the page; otherwise the app keeps working on the device and says so.
+
+Setting `PREVIEW` in `src/lib/store.tsx` to `true` builds a demo instead: six weeks of sample history under its own local key, never synced.
 
 ## Where things live
 

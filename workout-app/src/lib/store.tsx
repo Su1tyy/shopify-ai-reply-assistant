@@ -1,17 +1,36 @@
-import { createContext, useContext, useEffect, useMemo, useReducer, useRef, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { defaultUnit, findExercise } from "../data/library";
 import { defaultPlan } from "../data/plan";
 import { today } from "./dates";
 import { computePRs, createSession, isStarted, prKey, uid } from "./logic";
 import { withSampleHistory } from "./sample";
+import { Sync, type SyncState } from "./sync";
 import type { AppData, DayKey, Exercise, PlanDay, PlanItem, PRKind, PREvent, Session, SetEntry, Settings } from "./types";
 
-export const PREVIEW = true;
+/** True builds a demo with sample history that never touches an account; her live page runs with false. */
+export const PREVIEW = false;
 const STORAGE_KEY = PREVIEW ? "my-training.preview.v1" : "my-training.v1";
 
 export function freshData(): AppData {
   const base: AppData = { v: 1, plan: defaultPlan(), sessions: {}, custom: [], settings: { name: "", sound: false } };
   return PREVIEW ? withSampleHistory(base, today()) : base;
+}
+
+/** The first version of her plan lived on this same page and kept a note per weekday; carry those over. */
+function withOldNotes(data: AppData): AppData {
+  try {
+    const raw = localStorage.getItem("ftPlanNotesV1");
+    const notes = raw ? (JSON.parse(raw) as Record<string, unknown>) : null;
+    if (notes && typeof notes === "object") {
+      for (const k of Object.keys(data.plan) as DayKey[]) {
+        const t = notes[k];
+        if (typeof t === "string" && t.trim()) data.plan[k].note = t.trim();
+      }
+    }
+  } catch {
+    /* nothing to carry over */
+  }
+  return data;
 }
 
 function loadLocal(): AppData {
@@ -24,7 +43,7 @@ function loadLocal(): AppData {
   } catch {
     /* storage unavailable or corrupt: start fresh */
   }
-  return freshData();
+  return PREVIEW ? freshData() : withOldNotes(freshData());
 }
 
 export type Action =
@@ -92,6 +111,14 @@ function applyAction(state: AppData, a: Exclude<Action, { type: "replace" }>): A
       const e = entry(a.date, a.uid);
       if (!e || !e.sets[a.idx]) return state;
       e.sets[a.idx] = { ...e.sets[a.idx], ...a.patch };
+      // A first-ever session has nothing to prefill from: carry what she enters into the open sets below it.
+      for (const k of ["w", "r", "s", "m"] as const) {
+        const v = a.patch[k];
+        if (v === undefined) continue;
+        for (let j = a.idx + 1; j < e.sets.length; j++) {
+          if (!e.sets[j].done && e.sets[j][k] === undefined) e.sets[j][k] = v;
+        }
+      }
       const x = sess(a.date)!;
       if (a.patch.done && !x.startedAt) x.startedAt = Date.now();
       return s;
@@ -188,13 +215,43 @@ interface Store {
   getEx: (id: string) => Exercise | undefined;
   /** Logs one set (creating the day's session if needed) and reports whether it is a personal best. */
   logSet: (date: string, dayKey: DayKey, uid: string, idx: number, values: Partial<SetEntry>) => PRKind | undefined;
+  /** Whether her data is reaching her Claude account. */
+  sync: SyncState;
 }
 
 const Ctx = createContext<Store | null>(null);
 
 export function StoreProvider({ children }: { children: ReactNode }) {
   const [data, dispatch] = useReducer(reducer, undefined, loadLocal);
+  const [sync, setSync] = useState<SyncState>(PREVIEW ? "preview" : "connecting");
   const timer = useRef<number | undefined>(undefined);
+  // The sync engine reads the newest state directly, including what it just adopted before React re-renders.
+  const latest = useRef(data);
+  latest.current = data;
+  const engine = useRef<Sync | null>(null);
+
+  useEffect(() => {
+    if (PREVIEW) return;
+    const s = new Sync({
+      get: () => latest.current,
+      replace: (d) => {
+        latest.current = d;
+        dispatch({ type: "replace", data: d });
+      },
+      status: setSync,
+      fresh: freshData,
+    });
+    engine.current = s;
+    void s.start();
+    return () => {
+      s.stop();
+      engine.current = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    engine.current?.schedule();
+  }, [data]);
 
   useEffect(() => {
     window.clearTimeout(timer.current);
@@ -217,8 +274,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       dispatch(update);
       return computePRs(next).byKey.get(prKey(date, id, idx));
     };
-    return { data, dispatch, prs, getEx: (id) => findExercise(id, data.custom), logSet };
-  }, [data, prs]);
+    return { data, dispatch, prs, getEx: (id) => findExercise(id, data.custom), logSet, sync };
+  }, [data, prs, sync]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

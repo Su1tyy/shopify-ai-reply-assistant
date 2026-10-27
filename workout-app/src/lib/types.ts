@@ -55,6 +55,8 @@ export interface PlanDay {
   title: string;
   focus: string;
   items: PlanItem[];
+  /** Her own notes for this weekday, kept across weeks. */
+  note?: string;
 }
 
 export type Plan = Record<DayKey, PlanDay>;

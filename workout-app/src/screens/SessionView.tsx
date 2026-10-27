@@ -160,6 +160,23 @@ export function SessionView({ date }: { date: string }) {
         )}
       </div>
 
+      {plan.note && (
+        <div className="px-4">
+          <div className="card px-4 pb-4 pt-2.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="t-foot font-semibold text-ink-2">Your notes for {DAY_NAME[dayKey]}</span>
+              <button
+                onClick={() => nav.push({ name: "dayEditor", key: dayKey })}
+                className="press -mr-2 h-9 px-2 t-foot font-semibold text-accent-strong"
+              >
+                Edit
+              </button>
+            </div>
+            <p className="whitespace-pre-wrap break-words t-sub">{plan.note}</p>
+          </div>
+        </div>
+      )}
+
       {session && (
         <Section
           title="Exercises"

@@ -387,6 +387,8 @@ export function missedThisWeek(data: AppData, now: Date): DayKey[] {
   const ws = weekStart(now);
   const done = completedSlots(data).get(toKey(ws));
   const first = firstTrackedDate(data);
+  // Nothing logged yet means nothing to catch up on.
+  if (!first) return [];
   const out: DayKey[] = [];
   for (const k of WEEK_ORDER) {
     const date = addDays(ws, WEEK_ORDER.indexOf(k));

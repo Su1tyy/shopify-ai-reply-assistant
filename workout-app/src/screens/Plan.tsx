@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowsClockwise, ArrowUp, Info, Plus, Trash } from "@phosphor-icons/react";
 import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
+import { SyncRow } from "../components/SyncStatus";
 import { Group, Note, Row, ScreenHeader, Section, Segmented, Stepper, Switch, VideoLink } from "../components/ui";
 import { isWeighted } from "../data/library";
 import { DAY_NAME, DAY_SHORT, WEEK_ORDER } from "../data/plan";
@@ -90,7 +91,7 @@ export function PlanScreen() {
 
   return (
     <>
-      <ScreenHeader title="Plan" subtitle="Her week, Saturday to Friday. Tap a day to change it." />
+      <ScreenHeader title="Plan" subtitle="Your week, Saturday to Friday. Tap a day to change it." />
       <div className="space-y-7">
         <Section>
           <Group>
@@ -126,8 +127,9 @@ export function PlanScreen() {
 
         <Section title="Settings">
           <Group>
-            <FieldRow title="Her name">
-              <CommitField label="Her name" value={s.name} placeholder="Optional" onCommit={(name) => dispatch({ type: "settings", patch: { name: name.trim() } })} />
+            <SyncRow />
+            <FieldRow title="Your name">
+              <CommitField label="Your name" value={s.name} placeholder="Optional" onCommit={(name) => dispatch({ type: "settings", patch: { name: name.trim() } })} />
             </FieldRow>
             <FieldRow title="Chime when rest ends">
               <Switch label="Chime when rest ends" on={s.sound} onChange={(sound) => dispatch({ type: "settings", patch: { sound } })} />
@@ -216,6 +218,17 @@ export function DayEditor({ dayKey, back }: { dayKey: DayKey; back: string }) {
                 value={day.focus}
                 placeholder="What this day is for"
                 onCommit={(focus) => dispatch({ type: "planDay", key: dayKey, patch: { focus: focus.trim() } })}
+              />
+            </StackRow>
+            <StackRow title="Notes">
+              <CommitField
+                label="Notes"
+                multiline
+                bare
+                rows={3}
+                value={day.note ?? ""}
+                placeholder="Weights you used, how it felt, anything to remember"
+                onCommit={(note) => dispatch({ type: "planDay", key: dayKey, patch: { note: note.trim() || undefined } })}
               />
             </StackRow>
             <FieldRow title="Rest day">
@@ -362,7 +375,7 @@ export function ItemEditor({ dayKey, itemUid, back }: { dayKey: DayKey; itemUid:
             Target now: {fmtTarget(item, ex)}
             {ex.type !== "time" && item.rest ? `, ${item.rest} s rest` : ""}.
             {item.optional ? " Optional exercises never hold up finishing the day." : ""}
-            {isWeighted(ex) ? ` Cable and Smith weights read in lb on her machine; dumbbells in kg.` : ""}
+            {isWeighted(ex) ? ` Cable and Smith weights read in lb on your machine; dumbbells in kg.` : ""}
           </p>
         </Section>
 

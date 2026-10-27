@@ -1,4 +1,5 @@
 import { WeekStrip } from "../components/Calendar";
+import { SyncNotice } from "../components/SyncStatus";
 import { Chip, ScreenHeader } from "../components/ui";
 import { fmtDayMonth, fmtWeekday, toKey, today } from "../lib/dates";
 import { prefersReducedMotion } from "../lib/feedback";
@@ -24,7 +25,8 @@ export function TodayScreen() {
         }
       />
       <div className="space-y-6">
-        <div className="px-4">
+        <div className="space-y-3 px-4">
+          <SyncNotice />
           <WeekStrip
             onSelect={(k) =>
               k === key ? window.scrollTo({ top: 0, behavior: prefersReducedMotion() ? "auto" : "smooth" }) : push({ name: "day", date: k })
