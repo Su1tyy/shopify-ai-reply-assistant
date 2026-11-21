@@ -8,8 +8,10 @@ export const MUSCLE_LABEL: Record<Muscle, string> = {
   forearms: "Forearms",
   abs: "Abs",
   obliques: "Obliques",
-  traps: "Traps",
-  "upper-back": "Upper back",
+  lats: "Lats",
+  "mid-back": "Mid back",
+  // The trapezius region of the diagram, from the neck to between the shoulder blades.
+  traps: "Upper back",
   "lower-back": "Lower back",
   glutes: "Glutes",
   adductors: "Inner thighs",
@@ -24,11 +26,12 @@ export const MUSCLE_ORDER: Muscle[] = [
   "quads",
   "adductors",
   "calves",
+  "lats",
+  "mid-back",
+  "traps",
+  "lower-back",
   "abs",
   "obliques",
-  "lower-back",
-  "upper-back",
-  "traps",
   "shoulders",
   "chest",
   "biceps",
@@ -64,11 +67,15 @@ export const LIBRARY: Exercise[] = [
   { id: "fire-hydrant", name: "Fire hydrant", equipment: "bodyweight", type: "reps", primary: ["glutes"], secondary: [], video: yt("12whZWUANRY"), perSide: true },
 
   // Back and shoulders
-  { id: "lat-pulldown", name: "Lat pulldown", equipment: "cable", type: "reps", primary: ["upper-back"], secondary: ["biceps", "shoulders"], video: yt("6MLs17iyK9I") },
-  { id: "seated-cable-row", name: "Seated cable row", equipment: "cable", type: "reps", primary: ["upper-back"], secondary: ["biceps", "traps"], video: yt("OeLb503NZHk") },
-  { id: "db-single-arm-row", name: "Dumbbell single-arm row", equipment: "dumbbell", type: "reps", primary: ["upper-back"], secondary: ["biceps"], video: yt("nMFCMNKnLgQ"), perSide: true },
+  { id: "lat-pulldown", name: "Lat pulldown", equipment: "cable", type: "reps", primary: ["lats"], secondary: ["mid-back", "biceps"], video: yt("6MLs17iyK9I") },
+  { id: "seated-cable-row", name: "Seated cable row", equipment: "cable", type: "reps", primary: ["mid-back", "lats"], secondary: ["traps", "biceps"], video: yt("OeLb503NZHk") },
+  { id: "db-single-arm-row", name: "Dumbbell single-arm row", equipment: "dumbbell", type: "reps", primary: ["lats", "mid-back"], secondary: ["biceps"], video: yt("nMFCMNKnLgQ"), perSide: true },
+  { id: "cable-straight-arm-pulldown", name: "Straight-arm cable pulldown", equipment: "cable", type: "reps", primary: ["lats"], secondary: ["triceps"], video: yt("70Ajji0V9vk") },
+  { id: "cable-face-pull", name: "Cable face pull", equipment: "cable", type: "reps", primary: ["traps", "mid-back"], secondary: ["shoulders"], video: yt("7z65m-qWJrA") },
+  { id: "superman", name: "Superman back extension", equipment: "bodyweight", type: "reps", primary: ["lower-back"], secondary: ["glutes", "hamstrings"], video: yt("HAjQVUp9mS4") },
+  { id: "bird-dog", name: "Bird dog", equipment: "bodyweight", type: "reps", primary: ["lower-back"], secondary: ["abs", "glutes"], video: yt("QQot16miua8"), perSide: true },
   { id: "cable-lateral-raise", name: "Cable lateral raise", equipment: "cable", type: "reps", primary: ["shoulders"], secondary: ["traps"], video: yt("Az_0nsym9AY"), perSide: true },
-  { id: "db-rear-delt-fly", name: "Dumbbell rear-delt fly", equipment: "dumbbell", type: "reps", primary: ["shoulders"], secondary: ["upper-back", "traps"], video: yt("buuYPLVXsJg") },
+  { id: "db-rear-delt-fly", name: "Dumbbell rear-delt fly", equipment: "dumbbell", type: "reps", primary: ["shoulders"], secondary: ["mid-back", "traps"], video: yt("buuYPLVXsJg") },
   { id: "db-shoulder-press", name: "Dumbbell shoulder press", equipment: "dumbbell", type: "reps", primary: ["shoulders"], secondary: ["triceps"], video: yt("qEwKCR5JCog") },
 
   // Chest and arms
@@ -113,7 +120,7 @@ export function isWeighted(ex: Exercise): boolean {
 /** Library groupings for the picker, by where the work lands. */
 export const LIBRARY_GROUPS: { label: string; muscles: Muscle[]; time?: boolean }[] = [
   { label: "Glutes and legs", muscles: ["glutes", "hamstrings", "quads", "adductors", "calves"] },
-  { label: "Back and shoulders", muscles: ["upper-back", "traps", "shoulders", "lower-back"] },
+  { label: "Back and shoulders", muscles: ["lats", "mid-back", "traps", "lower-back", "shoulders"] },
   { label: "Chest and arms", muscles: ["chest", "biceps", "triceps", "forearms"] },
   { label: "Core", muscles: ["abs", "obliques"] },
   { label: "Cardio and mobility", muscles: [], time: true },

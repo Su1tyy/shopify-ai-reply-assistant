@@ -376,7 +376,7 @@ function HeroCard({
           <p className="mt-1 t-sub text-ink-2">{focus}</p>
           {main.length > 0 && (
             <div className="mt-3 flex flex-wrap gap-1.5">
-              {main.slice(0, 4).map((m) => (
+              {main.slice(0, 5).map((m) => (
                 <Chip key={m} tone="accent">
                   {MUSCLE_LABEL[m]}
                 </Chip>

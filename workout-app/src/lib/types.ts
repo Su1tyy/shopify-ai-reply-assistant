@@ -13,8 +13,9 @@ export type Muscle =
   | "forearms"
   | "abs"
   | "obliques"
+  | "lats"
+  | "mid-back"
   | "traps"
-  | "upper-back"
   | "lower-back"
   | "glutes"
   | "adductors"
@@ -104,6 +105,8 @@ export interface Settings {
 
 export interface AppData {
   v: 1;
+  /** Which revision of the built-in plan this data has been brought up to (missing means 1). */
+  rev?: number;
   plan: Plan;
   sessions: Record<string, Session>;
   custom: Exercise[];

@@ -26,22 +26,23 @@ const VIEWBOX: Record<View, string> = {
   back: "818 -10 649 1448",
 };
 
-const SLUG_TO_MUSCLE: Record<string, Muscle> = {
-  chest: "chest",
-  deltoids: "shoulders",
-  biceps: "biceps",
-  triceps: "triceps",
-  forearm: "forearms",
-  abs: "abs",
-  obliques: "obliques",
-  trapezius: "traps",
-  "upper-back": "upper-back",
-  "lower-back": "lower-back",
-  gluteal: "glutes",
-  adductors: "adductors",
-  quadriceps: "quads",
-  hamstring: "hamstrings",
-  calves: "calves",
+// The artwork has one region across the lats and the middle of the back, so both muscles light it.
+const SLUG_TO_MUSCLES: Record<string, Muscle[]> = {
+  chest: ["chest"],
+  deltoids: ["shoulders"],
+  biceps: ["biceps"],
+  triceps: ["triceps"],
+  forearm: ["forearms"],
+  abs: ["abs"],
+  obliques: ["obliques"],
+  trapezius: ["traps"],
+  "upper-back": ["lats", "mid-back"],
+  "lower-back": ["lower-back"],
+  gluteal: ["glutes"],
+  adductors: ["adductors"],
+  quadriceps: ["quads"],
+  hamstring: ["hamstrings"],
+  calves: ["calves"],
 };
 
 export type MapMode = "focus" | "heat";
@@ -77,9 +78,9 @@ const Figure = memo(function Figure({ view, values, mode }: { view: View; values
         strokeLinejoin="round"
       />
       {Object.entries(DATA[view]).map(([slug, ps]) => {
-        const muscle = SLUG_TO_MUSCLE[slug];
-        const fill = muscle
-          ? muscleFill(values[muscle] ?? 0, mode)
+        const muscles = SLUG_TO_MUSCLES[slug];
+        const fill = muscles
+          ? muscleFill(Math.max(...muscles.map((m) => values[m] ?? 0)), mode)
           : slug === "hair"
             ? "var(--body-hair)"
             : "var(--body-skin)";

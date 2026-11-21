@@ -21,6 +21,10 @@ The live build saves everything on the device and mirrors it to the viewer's Cla
 
 Setting `PREVIEW` in `src/lib/store.tsx` to `true` builds a demo instead: six weeks of sample history under its own local key, never synced.
 
+## Changing the built-in plan
+
+A saved plan is never replaced wholesale, so a change to `defaultPlan()` in `src/data/plan.ts` only reaches new users. To bring existing ones along, raise `PLAN_REV` and add a step to `upgradePlan()`: a day still exactly as the previous revision shipped it can take the new version, and an edited day should only gain what it lacks. The store runs the upgrade on load and after sync, and `UpdateNotice` shows a one-time card about what changed (rewrite its text for each revision).
+
 ## Where things live
 
 - `src/data`: exercise library with demo video links, the default weekly plan, body diagram paths

@@ -89,7 +89,7 @@ function fingerprints(b: Bodies): Map<string, string> {
 
 export function split(data: AppData): Bodies {
   const m: Bodies = new Map();
-  m.set("profile", { v: 1, plan: data.plan, custom: data.custom, settings: data.settings });
+  m.set("profile", { v: 1, rev: data.rev, plan: data.plan, custom: data.custom, settings: data.settings });
   for (const [date, s] of Object.entries(data.sessions)) m.set(`s_${date}`, s as unknown as Record<string, unknown>);
   return m;
 }
@@ -101,7 +101,7 @@ function validPlan(p: unknown): p is Plan {
 }
 
 export function join(bodies: Bodies, fallback: AppData): AppData {
-  const p = bodies.get("profile") as { plan?: unknown; custom?: unknown; settings?: Partial<Settings> } | undefined;
+  const p = bodies.get("profile") as { rev?: unknown; plan?: unknown; custom?: unknown; settings?: Partial<Settings> } | undefined;
   const plan = p?.plan;
   const custom = p?.custom;
   const sessions: Record<string, Session> = {};
@@ -112,6 +112,8 @@ export function join(bodies: Bodies, fallback: AppData): AppData {
   }
   return structuredClone({
     v: 1,
+    // A profile saved before plan revisions existed is revision 1; the store upgrades it.
+    rev: typeof p?.rev === "number" ? p.rev : p ? 1 : fallback.rev,
     plan: validPlan(plan) ? plan : fallback.plan,
     custom: Array.isArray(custom) ? (custom as Exercise[]) : fallback.custom,
     settings: { ...fallback.settings, ...(p?.settings ?? {}) },

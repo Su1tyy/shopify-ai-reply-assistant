@@ -1,19 +1,82 @@
 import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from "react";
 import { defaultUnit, findExercise } from "../data/library";
-import { defaultPlan } from "../data/plan";
+import { defaultPlan, PLAN_REV, upgradePlan } from "../data/plan";
 import { today } from "./dates";
 import { computePRs, createSession, isStarted, prKey, uid } from "./logic";
 import { withSampleHistory } from "./sample";
 import { Sync, type SyncState } from "./sync";
-import type { AppData, DayKey, Exercise, PlanDay, PlanItem, PRKind, PREvent, Session, SetEntry, Settings } from "./types";
+import type {
+  AppData,
+  DayKey,
+  Exercise,
+  Muscle,
+  PlanDay,
+  PlanItem,
+  PRKind,
+  PREvent,
+  Session,
+  SetEntry,
+  Settings,
+} from "./types";
 
 /** True builds a demo with sample history that never touches an account; her live page runs with false. */
 export const PREVIEW = false;
 const STORAGE_KEY = PREVIEW ? "my-training.preview.v1" : "my-training.v1";
+const NOTICE_KEY = "my-training.notice";
 
 export function freshData(): AppData {
-  const base: AppData = { v: 1, plan: defaultPlan(), sessions: {}, custom: [], settings: { name: "", sound: false } };
+  const base: AppData = { v: 1, rev: PLAN_REV, plan: defaultPlan(), sessions: {}, custom: [], settings: { name: "", sound: false } };
   return PREVIEW ? withSampleHistory(base, today()) : base;
+}
+
+// "Upper back" used to be one muscle covering the lats and the middle of the back.
+function splitOldBack(ms: Muscle[]): Muscle[] {
+  return [...new Set(ms.flatMap((m) => ((m as string) === "upper-back" ? (["lats", "mid-back"] as Muscle[]) : [m])))];
+}
+
+/** Brings data saved by an older version up to date, keeping her edits. `upgraded` is true when her plan changed. */
+export function migrate(data: AppData): { data: AppData; upgraded: boolean } {
+  const rev = data.rev ?? 1;
+  const oldMuscles = data.custom.some((e) => [...e.primary, ...e.secondary].some((m) => (m as string) === "upper-back"));
+  if (rev >= PLAN_REV && !oldMuscles) return { data, upgraded: false };
+  const out = structuredClone(data);
+  for (const e of out.custom) {
+    e.primary = splitOldBack(e.primary);
+    e.secondary = splitOldBack(e.secondary);
+  }
+  let upgraded = false;
+  if (rev < PLAN_REV) {
+    const changed = upgradePlan(out.plan, rev);
+    out.rev = PLAN_REV;
+    for (const k of changed) refreshPlaceholders(out, k);
+    upgraded = changed.length > 0;
+  }
+  return { data: out, upgraded };
+}
+
+/** A one-off card on Today saying what changed in her plan, kept until she dismisses it. */
+function markUpgraded() {
+  try {
+    localStorage.setItem(NOTICE_KEY, `plan-${PLAN_REV}`);
+  } catch {
+    /* the card is a nicety */
+  }
+}
+
+export function upgradeNoticePending(): boolean {
+  try {
+    return localStorage.getItem(NOTICE_KEY) === `plan-${PLAN_REV}`;
+  } catch {
+    return false;
+  }
+}
+
+export function clearUpgradeNotice() {
+  try {
+    localStorage.removeItem(NOTICE_KEY);
+  } catch {
+    /* nothing to clear */
+  }
 }
 
 /** The first version of her plan lived on this same page and kept a note per weekday; carry those over. */
@@ -38,7 +101,11 @@ function loadLocal(): AppData {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as AppData;
-      if (parsed && parsed.v === 1 && parsed.plan && parsed.sessions) return parsed;
+      if (parsed && parsed.v === 1 && parsed.plan && parsed.sessions) {
+        const m = migrate(parsed);
+        if (m.upgraded) markUpgraded();
+        return m.data;
+      }
     }
   } catch {
     /* storage unavailable or corrupt: start fresh */
@@ -235,8 +302,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const s = new Sync({
       get: () => latest.current,
       replace: (d) => {
-        latest.current = d;
-        dispatch({ type: "replace", data: d });
+        // Data from the account may predate this version: upgrade it here too, then save the result back.
+        const m = migrate(d);
+        if (m.upgraded) markUpgraded();
+        latest.current = m.data;
+        dispatch({ type: "replace", data: m.data });
       },
       status: setSync,
       fresh: freshData,
