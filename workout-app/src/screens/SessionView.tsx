@@ -285,10 +285,18 @@ function HeroCard({
     ? session.entries.map((e) => ({ exId: e.exId, sets: e.sets.length, min: e.min, max: e.max, rest: e.rest }))
     : plan.items;
   const focusVals = muscleFocus(items.map((i) => getEx(i.exId)));
-  // Lead with the muscles that get the most sets today.
+  // Lead with the muscles that get the most sets today; on a tie, the one the workout reaches first.
   const load = new Map<Muscle, number>();
-  for (const it of items) getEx(it.exId)?.primary.forEach((m) => load.set(m, (load.get(m) ?? 0) + it.sets));
-  const main = MUSCLE_ORDER.filter((m) => focusVals[m] === 1).sort((a, b) => (load.get(b) ?? 0) - (load.get(a) ?? 0));
+  const first = new Map<Muscle, number>();
+  items.forEach((it, i) =>
+    getEx(it.exId)?.primary.forEach((m) => {
+      load.set(m, (load.get(m) ?? 0) + it.sets);
+      if (!first.has(m)) first.set(m, i);
+    }),
+  );
+  const main = MUSCLE_ORDER.filter((m) => focusVals[m] === 1).sort(
+    (a, b) => (load.get(b) ?? 0) - (load.get(a) ?? 0) || (first.get(a) ?? 0) - (first.get(b) ?? 0),
+  );
   const minutes = estimateMinutes(data, items);
 
   const done = session ? doneSetCount(session) : 0;

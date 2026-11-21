@@ -20,8 +20,8 @@ export function UpdateNotice() {
       <div className="min-w-0 flex-1">
         <div className="t-headline">Your back day got an upgrade</div>
         <p className="mt-0.5 t-foot text-ink-2">
-          Sunday now trains every part of your back: lats, mid back, upper back and lower back. Monday adds bird dogs for a
-          stronger lower back.
+          Sunday now trains every part of your back: lats, mid back, upper back and lower back. New on Sunday: straight-arm
+          pulldowns, face pulls and cable pull-throughs.
         </p>
         <div className="mt-3 flex flex-wrap gap-2">
           <button

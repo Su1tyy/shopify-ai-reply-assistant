@@ -24,7 +24,7 @@ export const DAY_SHORT: Record<DayKey, string> = {
 };
 
 /** The built-in plan's revision. Saved plans below it are brought up to date by upgradePlan. */
-export const PLAN_REV = 2;
+export const PLAN_REV = 3;
 
 type Spec = [exId: string, sets: number, min: number, max: number, rest: number, extra?: Partial<PlanItem>];
 
@@ -39,8 +39,12 @@ function day(key: DayKey, title: string, focus: string, specs: Spec[]): PlanDay 
 
 const SUNDAY_FOCUS = "Every part of the back, plus shoulders and abs";
 
+// The lower back's exercise on Sunday. With no deadlifts, good mornings or back-extension bench, a cable
+// hinge is the equipment move that works it: the lower back holds her braced while the glutes lift.
+const SUNDAY_HINGE: Spec = ["cable-pull-through", 3, 12, 15, 60, { note: "Hinge at the hips with a flat back, then squeeze your glutes to stand up." }];
+
 // Lats (pulldown, straight-arm pulldown, rows), mid back (rows, face pull), upper back (face pull)
-// and lower back (superman), then shoulders, a little biceps and abs.
+// and lower back (pull-through), then shoulders, a little biceps and abs.
 const SUNDAY: Spec[] = [
   ["lat-pulldown", 3, 10, 12, 90],
   ["seated-cable-row", 3, 10, 12, 90],
@@ -49,13 +53,11 @@ const SUNDAY: Spec[] = [
   ["cable-face-pull", 3, 12, 15, 60, { note: "Pull towards your eyes and squeeze your shoulder blades together." }],
   ["cable-lateral-raise", 3, 12, 15, 45],
   ["db-bicep-curl", 2, 12, 15, 60],
-  ["superman", 3, 10, 12, 45, { note: "Lift only a few inches and pause at the top." }],
+  SUNDAY_HINGE,
   ["cable-crunch", 3, 15, 15, 45],
   ["db-russian-twist", 3, 16, 16, 45, { note: "8 each side." }],
   ["reverse-crunch", 3, 12, 15, 45],
 ];
-
-const BIRD_DOG: Spec = ["bird-dog", 2, 8, 8, 30, { note: "Keep your back flat and reach long, not high." }];
 
 export function defaultPlan(): Plan {
   return {
@@ -76,7 +78,6 @@ export function defaultPlan(): Plan {
       ["db-weighted-situp", 3, 12, 12, 45],
       ["reverse-crunch", 2, 15, 15, 45],
       ["plank", 3, 45, 60, 45],
-      BIRD_DOG,
       ["mobility", 1, 15, 15, 0],
     ]),
     tue: day("tue", "Full body", "A little of everything, in lighter doses", [
@@ -182,9 +183,9 @@ function addMissing(d: PlanDay, specs: Spec[], tag: string): boolean {
  * Returns the days that changed.
  */
 export function upgradePlan(plan: Plan, fromRev: number): DayKey[] {
-  const changed: DayKey[] = [];
+  const changed = new Set<DayKey>();
   if (fromRev < 2) {
-    // Revision 2: every part of the back is trained, and the lower back twice a week.
+    // Revision 2: Sunday trains every part of the back.
     const sun = plan.sun;
     if (!sun.rest) {
       let updated = false;
@@ -192,20 +193,34 @@ export function upgradePlan(plan: Plan, fromRev: number): DayKey[] {
         sun.items = SUNDAY.map((s, i) => item(`sun-${i}`, s));
         updated = true;
       } else {
-        const additions = SUNDAY.filter(([id]) => ["cable-straight-arm-pulldown", "cable-face-pull", "superman"].includes(id));
+        const additions = SUNDAY.filter(([id]) => ["cable-straight-arm-pulldown", "cable-face-pull", SUNDAY_HINGE[0]].includes(id));
         updated = addMissing(sun, additions, "r2");
       }
       if (updated) {
         if (sun.focus === "Back, shoulders and abs") sun.focus = SUNDAY_FOCUS;
-        changed.push("sun");
+        changed.add("sun");
       }
     }
-    const mon = plan.mon;
-    if (!mon.rest && !mon.items.some((it) => it.exId === BIRD_DOG[0])) {
-      const at = mon.items.findIndex((it) => it.exId === "mobility");
-      mon.items.splice(at < 0 ? mon.items.length : at, 0, item("mon-r2-0", BIRD_DOG));
-      changed.push("mon");
+  }
+  if (fromRev < 3) {
+    // Revision 3: equipment exercises only for the lower back. The first version of revision 2 had a
+    // bodyweight superman on Sunday and bird dogs on Monday; the superman becomes a cable pull-through
+    // (or just goes, if that day already has one) and the bird dogs go.
+    for (const key of WEEK_ORDER) {
+      const d = plan[key];
+      if (d.rest) continue;
+      const count = d.items.length;
+      d.items = d.items.filter((it) => it.exId !== "bird-dog");
+      let updated = d.items.length !== count;
+      const at = d.items.findIndex((it) => it.exId === "superman");
+      if (at >= 0) {
+        const hasHinge = d.items.some((it) => it.exId === SUNDAY_HINGE[0]);
+        if (hasHinge) d.items.splice(at, 1);
+        else d.items.splice(at, 1, item(`${key}-r3-0`, SUNDAY_HINGE));
+        updated = true;
+      }
+      if (updated) changed.add(key);
     }
   }
-  return changed;
+  return [...changed];
 }

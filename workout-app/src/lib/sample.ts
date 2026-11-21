@@ -19,8 +19,6 @@ const RANGE: Record<string, [number, number]> = {
   "db-rear-delt-fly": [2, 4],
   "cable-straight-arm-pulldown": [15, 25],
   "cable-face-pull": [15, 25],
-  superman: [10, 14],
-  "bird-dog": [8, 10],
   "cable-crunch": [30, 45],
   "db-russian-twist": [3, 5],
   "pallof-press": [15, 25],

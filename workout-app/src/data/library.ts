@@ -72,8 +72,6 @@ export const LIBRARY: Exercise[] = [
   { id: "db-single-arm-row", name: "Dumbbell single-arm row", equipment: "dumbbell", type: "reps", primary: ["lats", "mid-back"], secondary: ["biceps"], video: yt("nMFCMNKnLgQ"), perSide: true },
   { id: "cable-straight-arm-pulldown", name: "Straight-arm cable pulldown", equipment: "cable", type: "reps", primary: ["lats"], secondary: ["triceps"], video: yt("70Ajji0V9vk") },
   { id: "cable-face-pull", name: "Cable face pull", equipment: "cable", type: "reps", primary: ["traps", "mid-back"], secondary: ["shoulders"], video: yt("7z65m-qWJrA") },
-  { id: "superman", name: "Superman back extension", equipment: "bodyweight", type: "reps", primary: ["lower-back"], secondary: ["glutes", "hamstrings"], video: yt("HAjQVUp9mS4") },
-  { id: "bird-dog", name: "Bird dog", equipment: "bodyweight", type: "reps", primary: ["lower-back"], secondary: ["abs", "glutes"], video: yt("QQot16miua8"), perSide: true },
   { id: "cable-lateral-raise", name: "Cable lateral raise", equipment: "cable", type: "reps", primary: ["shoulders"], secondary: ["traps"], video: yt("Az_0nsym9AY"), perSide: true },
   { id: "db-rear-delt-fly", name: "Dumbbell rear-delt fly", equipment: "dumbbell", type: "reps", primary: ["shoulders"], secondary: ["mid-back", "traps"], video: yt("buuYPLVXsJg") },
   { id: "db-shoulder-press", name: "Dumbbell shoulder press", equipment: "dumbbell", type: "reps", primary: ["shoulders"], secondary: ["triceps"], video: yt("qEwKCR5JCog") },
